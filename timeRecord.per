@@ -1,0 +1,59 @@
+
+ACTION DEFAULTS
+	ACTION close (TEXT="Quit", IMAGE="fa-power-off")
+	ACTION accept (TEXT="Accept", IMAGE="fa-check")
+	ACTION cancel (IMAGE="fa-close")
+	ACTION viewDate (TEXT="View Date", IMAGE="fa-calendar")
+	ACTION update (IMAGE="fa-pencil")
+	ACTION abort (TEXT="Abort(no save)", IMAGE="fa-power-off")
+END -- AD
+
+TOOLBAR
+	ITEM close
+	ITEM accept
+	ITEM cancel
+  ITEM viewDate
+	ITEM update
+	ITEM abort
+END -- TB
+
+LAYOUT (TEXT="Time Recording", STYLE="main2")
+VBOX
+GRID
+{
+[f001                                                       |jira      |cd      ]
+Date:[dte       ][vd]
+}
+END -- GRID
+TABLE
+{
+[a001     |a002 |a003 |a004|a005|a006|a007                                            ]
+
+}
+END -- TABLE
+END -- VBOX
+
+ATTRIBUTES
+f001 = FORMONLY.l_str;
+COMBOBOX cd = FORMONLY.l_cd, INITIALIZER=codes;
+jira = FORMONLY.l_jira;
+DATEEDIT dte = FORMONLY.l_dte;
+BUTTON vd : viewDate;
+
+a001 = FORMONLY.l_date, TITLE="Date";
+a002 = FORMONLY.l_time, TITLE="Time";
+a003 = FORMONLY.l_dur, TITLE="Dur";
+a004 = FORMONLY.l_for, TITLE="For";
+a005 = FORMONLY.l_type, TITLE="Type";
+a006 = FORMONLY.l_jirano, TITLE="Jira";
+a007 = FORMONLY.l_what, TITLE="What";
+
+INSTRUCTIONS
+SCREEN RECORD arr ( 
+	FORMONLY.l_date,
+	FORMONLY.l_time,
+	FORMONLY.l_dur,
+	FORMONLY.l_for,
+	FORMONLY.l_type,
+	FORMONLY.l_jirano,
+	FORMONLY.l_what )
