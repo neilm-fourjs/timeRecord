@@ -17,7 +17,7 @@ TYPE t_arr2 DYNAMIC ARRAY OF RECORD
 	l_what STRING
 END RECORD
 
-DEFINE m_codes DYNAMIC ARRAY OF STRING
+DEFINE m_codes   DYNAMIC ARRAY OF STRING
 DEFINE m_dataDir STRING
 MAIN
 	DEFINE l_str  STRING
@@ -42,42 +42,36 @@ MAIN
 		INPUT BY NAME l_str, l_jira, l_cd
 			ON ACTION accept
 				IF l_str IS NOT NULL AND l_cd IS NOT NULL THEN
-					DISPLAY "adding: ", l_str
 					LET x               = l_arr.getLength() + 1
 					LET l_arr[x].l_dt   = CURRENT
 					LET l_arr[x].l_code = l_cd
 					LET l_arr[x].l_what = l_str
 					LET l_arr[x].l_jira = l_jira
 					CALL setup_arr2(l_arr, l_arr2)
-				ELSE
-					DISPLAY "not adding"
 				END IF
-				LET l_str = ""
+				LET l_str  = ""
 				LET l_jira = ""
-				LET l_cd  = ""
+				LET l_cd   = ""
 		END INPUT
 		DISPLAY ARRAY l_arr2 TO arr.*
 			BEFORE ROW
 				IF l_str IS NULL THEN
-					LET x = arr_curr()
-					LET l_str = l_arr[x].l_what
+					LET x      = arr_curr()
+					LET l_str  = l_arr[x].l_what
 					LET l_jira = l_arr[x].l_jira
-					LET l_cd = l_arr[x].l_code
+					LET l_cd   = l_arr[x].l_code
 				END IF
 			ON ACTION update
-				LET x = arr_curr()
-				LET y = scr_line()
+				LET x        = arr_curr()
+				LET y        = scr_line()
 				LET int_flag = FALSE
-				INPUT l_arr2[x].l_time, l_arr2[x].l_jira, l_arr2[x].l_what  
-					FROM arr[y].l_time, arr[y].l_jirano, arr[y].l_what
-					ATTRIBUTES(WITHOUT DEFAULTS)
+				INPUT l_arr2[x].l_time, l_arr2[x].l_jira, l_arr2[x].l_what FROM arr[y].l_time, arr[y].l_jirano, arr[y].l_what
+						ATTRIBUTES(WITHOUT DEFAULTS)
 				IF NOT int_flag THEN
 					LET l_arr[x].l_what = l_arr2[x].l_what
 					LET l_arr[x].l_jira = l_arr2[x].l_jira
-					LET l_tmp = l_arr2[y].l_date||" "||l_arr2[y].l_time
-					DISPLAY "tmp: ",l_tmp
+					LET l_tmp           = l_arr2[y].l_date || " " || l_arr2[y].l_time
 					LET l_arr[x].l_dt = util.Datetime.parse(l_tmp, "%d/%m/%Y %H:%M")
-					DISPLAY SFMT("Dte: %1 Tim: %2 dt: %3", l_arr2[y].l_date,l_arr2[y].l_time,l_arr[x].l_dt)
 					CALL setup_arr2(l_arr, l_arr2)
 				END IF
 		END DISPLAY
@@ -100,7 +94,7 @@ END MAIN
 FUNCTION getCodes()
 	DEFINE l_file STRING
 	DEFINE l_json TEXT
-	LET l_file = os.Path.join(m_dataDir,"codes.json")
+	LET l_file = os.Path.join(m_dataDir, "codes.json")
 	IF os.Path.exists(l_file) THEN
 		LOCATE l_json IN FILE l_file
 		CALL util.JSONArray.parse(s: l_json).toFGL(m_codes)
@@ -129,12 +123,12 @@ FUNCTION loadArr(l_arr t_arr, l_dte DATE) RETURNS()
 	DEFINE l_file STRING
 	DEFINE l_json TEXT
 	CALL l_arr.clear()
-	LET l_file = os.Path.join(m_dataDir,"data" || util.Datetime.format(l_dte, "%y%m%d") || ".json")
+	LET l_file = os.Path.join(m_dataDir, "data" || util.Datetime.format(l_dte, "%y%m%d") || ".json")
 	IF NOT os.Path.exists(l_file) THEN
 		RETURN
 	END IF
-	IF NOT os.Path.copy(l_file, l_file||".bak") THEN
-		CALL fgl_winMessage("Error",SFMT("Failed to make a backup of %1 !", l_file), "exclamation")
+	IF NOT os.Path.copy(l_file, l_file || ".bak") THEN
+		CALL fgl_winMessage("Error", SFMT("Failed to make a backup of %1 !", l_file), "exclamation")
 		EXIT PROGRAM
 	END IF
 	LOCATE l_json IN FILE l_file
@@ -146,7 +140,7 @@ END FUNCTION
 FUNCTION saveArr(l_arr t_arr, l_dte DATE) RETURNS()
 	DEFINE l_file STRING
 	DEFINE l_json TEXT
-	LET l_file = os.Path.join(m_dataDir,"data" || util.Datetime.format(l_dte, "%y%m%d") || ".json")
+	LET l_file = os.Path.join(m_dataDir, "data" || util.Datetime.format(l_dte, "%y%m%d") || ".json")
 	LOCATE l_json IN FILE l_file
 	LET l_json = util.JSON.stringify(l_arr)
 END FUNCTION
