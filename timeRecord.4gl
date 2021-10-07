@@ -133,6 +133,10 @@ FUNCTION loadArr(l_arr t_arr, l_dte DATE) RETURNS()
 	IF NOT os.Path.exists(l_file) THEN
 		RETURN
 	END IF
+	IF NOT os.Path.copy(l_file, l_file||".bak") THEN
+		CALL fgl_winMessage("Error",SFMT("Failed to make a backup of %1 !", l_file), "exclamation")
+		EXIT PROGRAM
+	END IF
 	LOCATE l_json IN FILE l_file
 	IF os.Path.exists(l_file) THEN
 		CALL util.JSON.parse(l_json, l_arr)
