@@ -4,6 +4,7 @@ ACTION DEFAULTS
 	ACTION accept (TEXT="Accept", IMAGE="fa-check")
 	ACTION cancel (IMAGE="fa-close")
 	ACTION viewDate (TEXT="View Date", IMAGE="fa-calendar")
+	ACTION clear (TEXT="Clear", IMAGE="fa-eraser")
 	ACTION update (IMAGE="fa-pencil")
 	ACTION abort (TEXT="Abort(no save)", IMAGE="fa-power-off")
 END -- AD
@@ -13,6 +14,7 @@ TOOLBAR
 	ITEM accept
 	ITEM cancel
   ITEM viewDate
+	ITEM clear
 	ITEM update
 	ITEM abort
 END -- TB
@@ -36,7 +38,7 @@ END -- VBOX
 ATTRIBUTES
 f001 = FORMONLY.l_str;
 COMBOBOX cd = FORMONLY.l_cd, INITIALIZER=codes;
-jira = FORMONLY.l_jira;
+jira = FORMONLY.l_jira, UPSHIFT;
 DATEEDIT dte = FORMONLY.l_dte;
 BUTTON vd : viewDate;
 

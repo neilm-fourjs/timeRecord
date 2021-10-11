@@ -75,6 +75,11 @@ MAIN
 					CALL setup_arr2(l_arr, l_arr2)
 				END IF
 		END DISPLAY
+		ON ACTION clear
+			LET l_str  = ""
+			LET l_jira = ""
+			LET l_cd   = ""
+			NEXT FIELD l_str
 		ON ACTION close
 			LET int_flag = FALSE
 			EXIT DIALOG
