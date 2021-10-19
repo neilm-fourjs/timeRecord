@@ -70,6 +70,7 @@
   <Group environment="value:DATADIR=../data" id="75644415" label="timeRecord" language="Genero" targetDirectory="$(ProjectDir)">
     <Application binaryName="timeRecord" dependencies="14000,1986" id="18736" label="timeRecord" targetDirectory="$(ProjectDir)/bin">
       <Configuration id="-1429969501" label="Application"/>
+      <File filePath="default.4st"/>
       <File filePath="timeRecord.4gl"/>
       <File filePath="timeRecord.per"/>
     </Application>

@@ -40,6 +40,10 @@ MAIN
 	DISPLAY TODAY TO l_dte
 	DIALOG ATTRIBUTES(UNBUFFERED)
 		INPUT BY NAME l_str, l_jira, l_cd
+			AFTER FIELD l_str
+				IF l_str IS NOT NULL AND l_cd IS NULL THEN
+					NEXT FIELD l_cd
+				END IF
 			ON ACTION accept
 				IF l_str IS NOT NULL AND l_cd IS NOT NULL THEN
 					LET x               = l_arr.getLength() + 1
