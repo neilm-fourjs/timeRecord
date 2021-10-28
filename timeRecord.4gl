@@ -1,6 +1,7 @@
 IMPORT util
 IMPORT os
 
+CONSTANT C_NON_WORK     = "Non Work"
 CONSTANT C_FJS_MISC      = "FJS Misc"
 CONSTANT C_FJS_SUPP      = "FJS Supp"
 CONSTANT C_FJS_CLOUD     = "FJS Cloud"
@@ -14,6 +15,7 @@ CONSTANT C_EMAIL         = "fa-envelope-o"
 CONSTANT C_PHONE         = "fa-phone"
 CONSTANT C_TEAMS         = "fa-windows"
 CONSTANT C_TICKET        = "fa-tag"
+CONSTANT C_NON           = "fa-ban"
 
 TYPE t_arr DYNAMIC ARRAY OF RECORD
 	l_dt   DATETIME YEAR TO MINUTE,
@@ -231,6 +233,10 @@ FUNCTION getQuickEvents()
 		LET m_quick[x].img  = C_TICKET
 		LET m_quick[x].desc = "Work on"
 		LET x               = x + 1
+		LET m_quick[x].code = C_NON_WORK
+		LET m_quick[x].img  = C_NON
+		LET m_quick[x].desc = "Lunch / Break / DayEnd"
+		LET x               = x + 1
 		LOCATE l_json IN FILE l_file
 		LET l_json = util.JSON.stringify(m_quick)
 		DISPLAY "quickEvents.json is missing, created"
@@ -303,8 +309,13 @@ FUNCTION setup_arr2(l_arr t_arr, l_arr2 t_arr2, l_arr3 t_arr3) RETURNS()
 			LET l_arr2[x].l_dur = l_arr[x + 1].l_dt - l_arr[x].l_dt
 		END IF
 		LET y                = l_arr[x].l_code.getIndexOf(" ", 1)
-		LET l_arr2[x].l_for  = l_arr[x].l_code.subString(1, y - 1)
-		LET l_arr2[x].l_type = l_arr[x].l_code.subString(y + 1, l_arr[x].l_code.getLength())
+		IF l_arr[x].l_code != C_NON_WORK THEN
+			LET l_arr2[x].l_for  = l_arr[x].l_code.subString(1, y - 1)
+			LET l_arr2[x].l_type = l_arr[x].l_code.subString(y + 1, l_arr[x].l_code.getLength())
+		ELSE
+			LET l_arr2[x].l_for = ""
+			LET l_arr2[x].l_type = l_arr[x].l_code
+		END IF
 		LET l_arr2[x].l_jira = l_arr[x].l_jira
 		LET l_arr2[x].l_what = l_arr[x].l_what
 		LET l_row3.l_dur = l_arr2[x].l_dur
@@ -314,10 +325,10 @@ FUNCTION setup_arr2(l_arr t_arr, l_arr2 t_arr2, l_arr3 t_arr3) RETURNS()
 		ELSE
 			LET l_row3.l_comm = l_arr[x].l_what
 		END IF
+		IF l_arr2[x].l_type = C_NON_WORK THEN CONTINUE FOR END IF
 		IF l_arr2[x].l_type = "Supp" THEN LET l_row3.l_comm = "Working on support tickets" END IF
 		IF l_row3.l_comm.subString(1,5) = "Teams" THEN LET l_row3.l_comm = "Teams" END IF
 		--DISPLAY SFMT("%1 %2 %3 %4",x, l_row3.l_act, l_row3.l_dur, l_row3.l_comm)
-		IF l_row3.l_comm = "Lunch" THEN CONTINUE FOR END IF
 		FOR z = 1 TO l_arr3.getLength()
 			IF l_arr3[z].l_act = l_row3.l_act AND l_arr3[z].l_comm = l_row3.l_comm THEN
 				IF l_row3.l_dur IS NOT NULL THEN
