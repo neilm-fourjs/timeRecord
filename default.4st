@@ -20,6 +20,9 @@ Property of Four Js*
   <Style name="Table:even">
     <StyleAttribute name="backgroundColor" value="systemAlternateBackground"/>
   </Style>
+  <Style name="Table.nohighlight">
+    <StyleAttribute name="highlightCurrentRow" value="no"/>
+  </Style>
 
 
   <Style name="Window">

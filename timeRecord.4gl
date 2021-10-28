@@ -1,19 +1,19 @@
 IMPORT util
 IMPORT os
 
-CONSTANT C_FJS_MISC = "FJS Misc"
-CONSTANT C_FJS_SUPP = "FJS Supp"
-CONSTANT C_FJS_CLOUD = "FJS Cloud"
-CONSTANT C_FJS_PM = "FJS PM"
-CONSTANT C_FJS_DEV = "FJS Dev"
-CONSTANT C_PS_PM = "PS PM"
-CONSTANT C_PS_DEV = "PS Dev"
-CONSTANT C_PREV_TASK = "Previous Task"
+CONSTANT C_FJS_MISC      = "FJS Misc"
+CONSTANT C_FJS_SUPP      = "FJS Supp"
+CONSTANT C_FJS_CLOUD     = "FJS Cloud"
+CONSTANT C_FJS_PM        = "FJS PM"
+CONSTANT C_FJS_DEV       = "FJS Dev"
+CONSTANT C_PS_PM         = "PS PM"
+CONSTANT C_PS_DEV        = "PS Dev"
+CONSTANT C_PREV_TASK     = "Previous Task"
 CONSTANT C_PREV_TASK_IMG = "fa-mail-reply"
-CONSTANT C_EMAIL = "fa-envelope-o"
-CONSTANT C_PHONE = "fa-phone"
-CONSTANT C_TEAMS = "fa-windows"
-CONSTANT C_TICKET = "fa-tag"
+CONSTANT C_EMAIL         = "fa-envelope-o"
+CONSTANT C_PHONE         = "fa-phone"
+CONSTANT C_TEAMS         = "fa-windows"
+CONSTANT C_TICKET        = "fa-tag"
 
 TYPE t_arr DYNAMIC ARRAY OF RECORD
 	l_dt   DATETIME YEAR TO MINUTE,
@@ -30,21 +30,29 @@ TYPE t_arr2 DYNAMIC ARRAY OF RECORD
 	l_jira STRING,
 	l_what STRING
 END RECORD
-DEFINE m_codes   DYNAMIC ARRAY OF STRING
-DEFINE m_quick   DYNAMIC ARRAY OF RECORD
-		code STRING,
-		desc STRING,
-		img STRING
-	END RECORD
+TYPE t_rec3 RECORD
+	l_act STRING,
+	l_dur INTERVAL HOUR TO MINUTE,
+	l_comm STRING
+END RECORD
+TYPE t_arr3 DYNAMIC ARRAY OF t_rec3
+
+DEFINE m_codes DYNAMIC ARRAY OF STRING
+DEFINE m_quick DYNAMIC ARRAY OF RECORD
+	code STRING,
+	desc STRING,
+	img  STRING
+END RECORD
 DEFINE m_dataDir STRING
 MAIN
-	DEFINE l_str  STRING
-	DEFINE l_jira STRING
-	DEFINE l_cd   STRING
-	DEFINE l_tmp  STRING
+	DEFINE l_str       STRING
+	DEFINE l_jira      STRING
+	DEFINE l_cd        STRING
+	DEFINE l_tmp       STRING
 	DEFINE x, y, l_row SMALLINT
-	DEFINE l_arr  t_arr
-	DEFINE l_arr2 t_arr2
+	DEFINE l_arr       t_arr
+	DEFINE l_arr2      t_arr2
+	DEFINE l_arr3      t_arr3
 	DEFINE l_quick DYNAMIC ARRAY OF RECORD
 		txt STRING,
 		img STRING
@@ -58,17 +66,17 @@ MAIN
 		LET l_quick[x].txt = SFMT("%1 / %2", m_quick[x].code, m_quick[x].desc)
 		LET l_quick[x].img = m_quick[x].img
 	END FOR
-	LET l_quick[x+1].txt = C_PREV_TASK
-	LET l_quick[x+1].img = C_PREV_TASK_IMG
+	LET l_quick[x + 1].txt = C_PREV_TASK
+	LET l_quick[x + 1].img = C_PREV_TASK_IMG
 
 	CALL loadArr(l_arr, TODAY)
 	IF l_arr.getLength() = 0 THEN
 		LET l_arr[1].l_what = "Emails"
-		LET l_tmp = TODAY||" 09:00"
-		LET l_arr[1].l_dt = util.Datetime.parse(l_tmp,"%d/%m/%Y %H:%M")
+		LET l_tmp           = TODAY || " 09:00"
+		LET l_arr[1].l_dt   = util.Datetime.parse(l_tmp, "%d/%m/%Y %H:%M")
 		LET l_arr[1].l_code = C_FJS_MISC
 	END IF
-	CALL setup_arr2(l_arr, l_arr2)
+	CALL setup_arr2(l_arr, l_arr2, l_arr3)
 
 	LET l_cd = C_FJS_MISC
 
@@ -78,8 +86,8 @@ MAIN
 	DIALOG ATTRIBUTES(UNBUFFERED)
 		DISPLAY ARRAY l_quick TO tab.*
 			ON ACTION quickEvent
-				LET l_row           = arr_curr()
-				LET x               = l_arr.getLength() + 1
+				LET l_row = arr_curr()
+				LET x     = l_arr.getLength() + 1
 				IF l_quick[l_row].txt = C_PREV_TASK THEN -- find previous ticket worked on
 					FOR l_row = l_arr.getLength() TO 2 STEP -1
 						IF l_arr[l_row].l_jira IS NOT NULL THEN
@@ -98,8 +106,11 @@ MAIN
 					LET l_arr[x].l_dt   = CURRENT
 					LET l_arr[x].l_code = m_quick[l_row].code
 					LET l_arr[x].l_what = m_quick[l_row].desc
+					IF l_arr[x].l_code = C_FJS_SUPP THEN
+						LET l_arr[x].l_jira = "SUPUK-"
+					END IF
 				END IF
-				CALL setup_arr2(l_arr, l_arr2)
+				CALL setup_arr2(l_arr, l_arr2, l_arr3)
 		END DISPLAY
 		INPUT BY NAME l_str, l_jira, l_cd ATTRIBUTES(WITHOUT DEFAULTS)
 			AFTER FIELD l_str
@@ -107,7 +118,7 @@ MAIN
 					NEXT FIELD l_cd
 				END IF
 			AFTER FIELD l_jira
-				IF l_jira.subString(1,5) = "SUPUK" THEN
+				IF l_jira.subString(1, 5) = "SUPUK" THEN
 					LET l_cd = C_FJS_SUPP
 				END IF
 			ON ACTION accept
@@ -117,7 +128,7 @@ MAIN
 					LET l_arr[x].l_code = l_cd
 					LET l_arr[x].l_what = l_str
 					LET l_arr[x].l_jira = l_jira
-					CALL setup_arr2(l_arr, l_arr2)
+					CALL setup_arr2(l_arr, l_arr2, l_arr3)
 				END IF
 				LET l_str  = ""
 				LET l_jira = ""
@@ -141,9 +152,11 @@ MAIN
 					LET l_arr[x].l_what = l_arr2[x].l_what
 					LET l_arr[x].l_jira = l_arr2[x].l_jira
 					LET l_tmp           = l_arr2[y].l_date || " " || l_arr2[y].l_time
-					LET l_arr[x].l_dt = util.Datetime.parse(l_tmp, "%d/%m/%Y %H:%M")
-					CALL setup_arr2(l_arr, l_arr2)
+					LET l_arr[x].l_dt   = util.Datetime.parse(l_tmp, "%d/%m/%Y %H:%M")
+					CALL setup_arr2(l_arr, l_arr2, l_arr3)
 				END IF
+		END DISPLAY
+		DISPLAY ARRAY l_arr3 TO summary.*
 		END DISPLAY
 		ON ACTION clear
 			LET l_str  = ""
@@ -169,45 +182,55 @@ END MAIN
 FUNCTION getQuickEvents()
 	DEFINE l_file STRING
 	DEFINE l_json TEXT
-	DEFINE x SMALLINT
+	DEFINE x      SMALLINT
 	LET l_file = os.Path.join(m_dataDir, "quickEvents.json")
 	IF os.Path.exists(l_file) THEN
 		LOCATE l_json IN FILE l_file
 		CALL util.JSONArray.parse(s: l_json).toFGL(m_quick)
 	ELSE
-		LET x = 1
+		LET x               = 1
 		LET m_quick[x].code = C_FJS_MISC
-		LET m_quick[x].img = C_EMAIL
-		LET m_quick[x].desc = "Email" LET x = x + 1
+		LET m_quick[x].img  = C_EMAIL
+		LET m_quick[x].desc = "Email"
+		LET x               = x + 1
 		LET m_quick[x].code = C_FJS_MISC
-		LET m_quick[x].img = C_PHONE
-		LET m_quick[x].desc = "Phone" LET x = x + 1
+		LET m_quick[x].img  = C_PHONE
+		LET m_quick[x].desc = "Phone"
+		LET x               = x + 1
 		LET m_quick[x].code = C_FJS_MISC
-		LET m_quick[x].img = C_TEAMS
-		LET m_quick[x].desc = "Teams" LET x = x + 1
+		LET m_quick[x].img  = C_TEAMS
+		LET m_quick[x].desc = "Teams"
+		LET x               = x + 1
 		LET m_quick[x].code = C_FJS_SUPP
-		LET m_quick[x].img = C_TICKET
-		LET m_quick[x].desc = "Work on " LET x = x + 1
+		LET m_quick[x].img  = C_TICKET
+		LET m_quick[x].desc = "Work on "
+		LET x               = x + 1
 		LET m_quick[x].code = C_FJS_SUPP
-		LET m_quick[x].img = C_PHONE
-		LET m_quick[x].desc = "Phone" LET x = x + 1
+		LET m_quick[x].img  = C_PHONE
+		LET m_quick[x].desc = "Phone"
+		LET x               = x + 1
 		LET m_quick[x].code = C_FJS_DEV
-		LET m_quick[x].img = C_TICKET
-		LET m_quick[x].desc = "Work on" LET x = x + 1
+		LET m_quick[x].img  = C_TICKET
+		LET m_quick[x].desc = "Work on"
+		LET x               = x + 1
 
 		LET m_quick[x].code = C_FJS_CLOUD
-		LET m_quick[x].img = C_EMAIL
-		LET m_quick[x].desc = "Email" LET x = x + 1
+		LET m_quick[x].img  = C_EMAIL
+		LET m_quick[x].desc = "Email"
+		LET x               = x + 1
 		LET m_quick[x].code = C_FJS_CLOUD
-		LET m_quick[x].img = C_PHONE
-		LET m_quick[x].desc = "Phone" LET x = x + 1
+		LET m_quick[x].img  = C_PHONE
+		LET m_quick[x].desc = "Phone"
+		LET x               = x + 1
 
 		LET m_quick[x].code = C_PS_PM
-		LET m_quick[x].img = C_TICKET
-		LET m_quick[x].desc = "Work on" LET x = x + 1
+		LET m_quick[x].img  = C_TICKET
+		LET m_quick[x].desc = "Work on"
+		LET x               = x + 1
 		LET m_quick[x].code = C_PS_DEV
-		LET m_quick[x].img = C_TICKET
-		LET m_quick[x].desc = "Work on" LET x = x + 1
+		LET m_quick[x].img  = C_TICKET
+		LET m_quick[x].desc = "Work on"
+		LET x               = x + 1
 		LOCATE l_json IN FILE l_file
 		LET l_json = util.JSON.stringify(m_quick)
 		DISPLAY "quickEvents.json is missing, created"
@@ -268,9 +291,11 @@ FUNCTION saveArr(l_arr t_arr, l_dte DATE) RETURNS()
 	LET l_json = util.JSON.stringify(l_arr)
 END FUNCTION
 --------------------------------------------------------------------------------
-FUNCTION setup_arr2(l_arr t_arr, l_arr2 t_arr2) RETURNS()
-	DEFINE x, y SMALLINT
+FUNCTION setup_arr2(l_arr t_arr, l_arr2 t_arr2, l_arr3 t_arr3) RETURNS()
+	DEFINE x, y, z SMALLINT
+	DEFINE l_row3 t_rec3
 	CALL l_arr2.clear()
+	CALL l_arr3.clear()
 	FOR x = 1 TO l_arr.getLength()
 		LET l_arr2[x].l_date = l_arr[x].l_dt
 		LET l_arr2[x].l_time = l_arr[x].l_dt
@@ -282,6 +307,31 @@ FUNCTION setup_arr2(l_arr t_arr, l_arr2 t_arr2) RETURNS()
 		LET l_arr2[x].l_type = l_arr[x].l_code.subString(y + 1, l_arr[x].l_code.getLength())
 		LET l_arr2[x].l_jira = l_arr[x].l_jira
 		LET l_arr2[x].l_what = l_arr[x].l_what
+		LET l_row3.l_dur = l_arr2[x].l_dur
+		LET l_row3.l_act = l_arr2[x].l_type
+		IF l_arr[x].l_jira IS NOT NULL THEN
+			LET l_row3.l_comm = l_arr[x].l_jira," - ",l_arr[x].l_what
+		ELSE
+			LET l_row3.l_comm = l_arr[x].l_what
+		END IF
+		IF l_arr2[x].l_type = "Supp" THEN LET l_row3.l_comm = "Working on support tickets" END IF
+		IF l_row3.l_comm.subString(1,5) = "Teams" THEN LET l_row3.l_comm = "Teams" END IF
+		--DISPLAY SFMT("%1 %2 %3 %4",x, l_row3.l_act, l_row3.l_dur, l_row3.l_comm)
+		IF l_row3.l_comm = "Lunch" THEN CONTINUE FOR END IF
+		FOR z = 1 TO l_arr3.getLength()
+			IF l_arr3[z].l_act = l_row3.l_act AND l_arr3[z].l_comm = l_row3.l_comm THEN
+				IF l_row3.l_dur IS NOT NULL THEN
+					LET l_arr3[z].l_dur = l_arr3[z].l_dur + l_row3.l_dur
+				END IF
+				LET l_row3.l_act = NULL
+			END IF
+		END FOR
+		IF l_row3.l_act IS NOT NULL THEN
+			LET z = l_arr3.getLength() + 1
+			LET l_arr3[z].l_act = l_row3.l_act
+			LET l_arr3[z].l_comm = l_row3.l_comm
+			LET l_arr3[z].l_dur = l_row3.l_dur
+		END IF
 	END FOR
 END FUNCTION
 --------------------------------------------------------------------------------
@@ -289,6 +339,7 @@ FUNCTION viewDate() RETURNS()
 	DEFINE l_dte  DATE
 	DEFINE l_arr  t_arr
 	DEFINE l_arr2 t_arr2
+	DEFINE l_arr3 t_arr3
 
 	DIALOG ATTRIBUTES(UNBUFFERED)
 		INPUT BY NAME l_dte
@@ -299,7 +350,7 @@ FUNCTION viewDate() RETURNS()
 						ERROR "No data for date!"
 						NEXT FIELD l_dte
 					END IF
-					CALL setup_arr2(l_arr, l_arr2)
+					CALL setup_arr2(l_arr, l_arr2, l_arr3)
 				END IF
 		END INPUT
 		DISPLAY ARRAY l_arr2 TO arr.*
