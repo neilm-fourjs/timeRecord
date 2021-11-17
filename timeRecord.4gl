@@ -1,7 +1,7 @@
 IMPORT util
 IMPORT os
 
-CONSTANT C_NON_WORK     = "Non Work"
+CONSTANT C_NON_WORK      = "Non Work"
 CONSTANT C_FJS_MISC      = "FJS Misc"
 CONSTANT C_FJS_SUPP      = "FJS Supp"
 CONSTANT C_FJS_CLOUD     = "FJS Cloud"
@@ -59,6 +59,9 @@ MAIN
 		txt STRING,
 		img STRING
 	END RECORD
+	DEFINE l_today DATE
+
+	LET l_today = TODAY
 
 	LET m_dataDir = fgl_getenv("DATADIR")
 
@@ -71,10 +74,10 @@ MAIN
 	LET l_quick[x + 1].txt = C_PREV_TASK
 	LET l_quick[x + 1].img = C_PREV_TASK_IMG
 
-	CALL loadArr(l_arr, TODAY)
+	CALL loadArr(l_arr, l_today)
 	IF l_arr.getLength() = 0 THEN
 		LET l_arr[1].l_what = "Emails"
-		LET l_tmp           = TODAY || " 09:00"
+		LET l_tmp           = l_today || " 09:00"
 		LET l_arr[1].l_dt   = util.Datetime.parse(l_tmp, "%d/%m/%Y %H:%M")
 		LET l_arr[1].l_code = C_FJS_MISC
 	END IF
@@ -84,7 +87,7 @@ MAIN
 
 	OPEN FORM f FROM "timeRecord"
 	DISPLAY FORM f
-	DISPLAY TODAY TO l_dte
+	DISPLAY l_today TO l_dte
 	DIALOG ATTRIBUTES(UNBUFFERED)
 		DISPLAY ARRAY l_quick TO tab.*
 			ON ACTION quickEvent
@@ -165,6 +168,8 @@ MAIN
 			LET l_jira = ""
 			LET l_cd   = C_FJS_MISC
 			NEXT FIELD l_str
+		ON ACTION save
+			CALL saveArr(l_arr, l_today)
 		ON ACTION close
 			LET int_flag = FALSE
 			EXIT DIALOG
@@ -173,11 +178,11 @@ MAIN
 			EXIT DIALOG
 		ON ACTION viewDate
 			CALL viewDate()
-			DISPLAY TODAY TO l_dte
+			DISPLAY l_today TO l_dte
 	END DIALOG
 
 	IF NOT int_flag THEN
-		CALL saveArr(l_arr, TODAY)
+		CALL saveArr(l_arr, l_today)
 	END IF
 END MAIN
 --------------------------------------------------------------------------------
@@ -365,6 +370,8 @@ FUNCTION viewDate() RETURNS()
 				END IF
 		END INPUT
 		DISPLAY ARRAY l_arr2 TO arr.*
+		END DISPLAY
+		DISPLAY ARRAY l_arr3 TO summary.*
 		END DISPLAY
 		ON ACTION cancel
 			EXIT DIALOG
